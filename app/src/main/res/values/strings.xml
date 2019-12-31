@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Credo Exto Task</string>
+    <string name="line_display">line_display</string>
 </resources>

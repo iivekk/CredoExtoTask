@@ -2,6 +2,7 @@ package ivan.franjkovic.credoextotask.adapter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,13 +23,16 @@ import butterknife.ButterKnife;
 import ivan.franjkovic.credoextotask.R;
 import ivan.franjkovic.credoextotask.db.Element;
 
+import static ivan.franjkovic.credoextotask.tools.Const.ITEM_HEIGHT;
+import static ivan.franjkovic.credoextotask.tools.Const.PREFERENCE_FILE;
+
 public class ElementListAdapter extends RecyclerView.Adapter<ElementListAdapter.ElementViewHolder> implements OnItemTouchHelperListener {
 
     private Context context;
-    private final LayoutInflater mInflater;
     private List<Element> mElements;
     private OnElementListChangedListener listener;
     private OnItemClickListener clickListener;
+    private SharedPreferences sharedPreferences;
 
     public class ElementViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
@@ -51,7 +55,7 @@ public class ElementListAdapter extends RecyclerView.Adapter<ElementListAdapter.
         public ElementViewHolder(@NonNull View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
-            rvItem.getLayoutParams().height = itemHeight();
+            //rvItem.getLayoutParams().height = itemHeight();
 
             itemView.setOnClickListener(this);
         }
@@ -66,16 +70,18 @@ public class ElementListAdapter extends RecyclerView.Adapter<ElementListAdapter.
     }
 
     public ElementListAdapter(Context context, OnElementListChangedListener onElementListChangedListener, OnItemClickListener clickListener) {
-        mInflater = LayoutInflater.from(context);
         this.context = context;
         this.listener = onElementListChangedListener;
         this.clickListener = clickListener;
+        mElements = new ArrayList<>();
     }
 
     @NonNull
     @Override
     public ElementViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = mInflater.inflate(R.layout.view_item, parent, false);
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.view_item, parent, false);
+
+        itemView.getLayoutParams().height = itemHeight();
         return new ElementViewHolder(itemView);
     }
 
@@ -102,13 +108,13 @@ public class ElementListAdapter extends RecyclerView.Adapter<ElementListAdapter.
     @Override
     public void onItemMove(int fromPosition, int toPosition) {
         Collections.swap(mElements, fromPosition, toPosition);
-        listener.onSwipeListChanged(sortedList(mElements));
+        listener.onSwipeListChanged(sortedList(mElements), mElements);
         notifyItemMoved(fromPosition, toPosition);
     }
 
     @Override
     public void onItemDismiss(int position) {
-        listener.onElementRemove(mElements.get(position));
+        listener.onElementRemove(mElements.get(position), mElements);
         notifyItemRemoved(position);
     }
 
@@ -118,8 +124,13 @@ public class ElementListAdapter extends RecyclerView.Adapter<ElementListAdapter.
     }
 
     private int itemHeight() {
-        int r = ((Activity) context).getWindow().findViewById(R.id.contentContainer).getHeight() - 4;
-        return r / 8;
+        sharedPreferences = context.getSharedPreferences(PREFERENCE_FILE, Context.MODE_PRIVATE);
+        int height = sharedPreferences.getInt(ITEM_HEIGHT, 0);
+        if (height > 0) {
+            return height;
+        } else {
+            return 256;
+        }
     }
 
     private List<Integer> sortedList(List<Element> elementList) {
@@ -136,4 +147,5 @@ public class ElementListAdapter extends RecyclerView.Adapter<ElementListAdapter.
         Date date = new Date(currentTime);
         return new String[]{dateFormat.format(date), timeFormat.format(date)};
     }
+
 }

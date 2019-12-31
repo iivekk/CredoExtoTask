@@ -8,9 +8,6 @@ import androidx.lifecycle.LiveData;
 
 import java.util.List;
 
-import ivan.franjkovic.credoextotask.db.Element;
-import ivan.franjkovic.credoextotask.db.ElementRepository;
-
 public class ElementViewModel extends AndroidViewModel {
 
     private ElementRepository mRepository;
